@@ -12,6 +12,7 @@ AMagicPill::AMagicPill()
 	PillEffectValue = 0.f;
 	PillMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PillMesh"));
 	RootComponent = PillMesh;
+	PillMesh->SetSimulatePhysics(true);
 
 }
 
