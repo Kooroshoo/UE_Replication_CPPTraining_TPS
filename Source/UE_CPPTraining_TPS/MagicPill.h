@@ -23,4 +23,13 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+protected:
+	// The amount of health/damage
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Values")
+	float PillEffectValue;
+
+public:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Components")
+	UStaticMeshComponent* PillMesh;
+
 };
