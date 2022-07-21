@@ -70,10 +70,24 @@ protected:
 
 	virtual void Jump() override;
 
+	virtual void BeginPlay() override;
+
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
 public:
 	/** Returns CameraBoom subobject **/
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+
+	// Particle effect
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Character")
+	UParticleSystemComponent* VisualEFX;
+
+	// functions bound to delegate
+	void MakeEFXVisible();
+	void MakeEFXInvisibile();
+
+	
 };
 

@@ -6,6 +6,9 @@
 #include "Components/BoxComponent.h"
 #include "Kismet/KismetMaterialLibrary.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "UE_CPPTraining_TPSCharacter.h"
+#include "UE_CPPTraining_TPSGameMode.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 APillSpawner::APillSpawner()
@@ -24,8 +27,6 @@ APillSpawner::APillSpawner()
 void APillSpawner::BeginPlay()
 {
 	Super::BeginPlay();
-
-	SpawnPills();
 	
 }
 
@@ -58,6 +59,53 @@ void APillSpawner::SpawnPills()
 			SpawnRotation.Yaw = FMath::FRand()*360.0f;
 
 			AMagicPill* SpawnedPill = World->SpawnActor<AMagicPill>(ItemToSpawn, SpawnLocation, SpawnRotation);
+		}
+	}
+}
+
+void APillSpawner::NotifyActorBeginOverlap(AActor* OtherActor)
+{
+	Super::NotifyActorBeginOverlap(OtherActor);
+
+	AUE_CPPTraining_TPSCharacter* IsOtherPlayer = Cast<AUE_CPPTraining_TPSCharacter>(OtherActor);
+	if (IsOtherPlayer)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Orange, FString::Printf(TEXT("%s has entered the volume"), *OtherActor->GetName()));
+		SpawnPills();
+
+		UWorld* World = GetWorld();
+		if (World)
+		{
+			AUE_CPPTraining_TPSGameMode* MyGameMode = Cast<AUE_CPPTraining_TPSGameMode>(UGameplayStatics::GetGameMode(World));
+
+			if (MyGameMode)
+			{
+				MyGameMode->CharacterVisualEffectDelegateStart.ExecuteIfBound();
+			}
+		}
+
+		OnPlayerEntered.Broadcast();
+	}
+}
+
+void APillSpawner::NotifyActorEndOverlap(AActor* OtherActor)
+{
+	Super::NotifyActorEndOverlap(OtherActor);
+
+	AUE_CPPTraining_TPSCharacter* IsOtherPlayer = Cast<AUE_CPPTraining_TPSCharacter>(OtherActor);
+	if (IsOtherPlayer)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Orange, FString::Printf(TEXT("%s has exited the volume"), *OtherActor->GetName()));
+
+		UWorld* World = GetWorld();
+		if (World)
+		{
+			AUE_CPPTraining_TPSGameMode* MyGameMode = Cast<AUE_CPPTraining_TPSGameMode>(UGameplayStatics::GetGameMode(World));
+
+			if (MyGameMode)
+			{
+				MyGameMode->CharacterVisualEffectDelegateStop.ExecuteIfBound();
+			}
 		}
 	}
 }

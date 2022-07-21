@@ -10,10 +10,17 @@ UCLASS()
 class UE_CPPTRAINING_TPS_API AMagicPill : public AActor
 {
 	GENERATED_BODY()
+
+
+
 	
 public:	
 	// Sets default values for this actor's properties
 	AMagicPill();
+
+	// trigger source (Pill spawner) for our custom event 
+	UPROPERTY()
+	class APillSpawner* TriggerEventSource;
 
 protected:
 	// Called when the game starts or when spawned
@@ -31,5 +38,9 @@ protected:
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Components")
 	UStaticMeshComponent* PillMesh;
+
+	// this function is randomizing the pill effect
+	UFUNCTION()
+	void OnTriggerEvent();
 
 };

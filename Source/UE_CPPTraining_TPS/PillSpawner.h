@@ -30,6 +30,11 @@ public:
 	UFUNCTION(BlueprintPure, Category="Spawning")
 	FVector GetRandomPointInVolume();
 
+	// Declare custom event (allow to shield the broadcast execution of these events from other classes)
+	DECLARE_EVENT(APillSpawner, FPlayerEntered)
+
+	FPlayerEntered OnPlayerEntered;
+
 private:
 	//Box Component Spawning Volume
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Spawning", meta=(AllowPrivateAccess="true"))
@@ -37,5 +42,11 @@ private:
 
 	// spawns magic pills
 	void SpawnPills();
+
+	// event when a actor enters the volume
+	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
+
+	// event when a actor exits the volume
+	virtual void NotifyActorEndOverlap(AActor* OtherActor) override;
 
 };

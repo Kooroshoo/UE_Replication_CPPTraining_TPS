@@ -8,6 +8,10 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "Particles/ParticleSystem.h"
+#include "Particles/ParticleSystemComponent.h"
+#include "UE_CPPTraining_TPSGameMode.h"
 
 //////////////////////////////////////////////////////////////////////////
 // AUE_CPPTraining_TPSCharacter
@@ -45,6 +49,16 @@ AUE_CPPTraining_TPSCharacter::AUE_CPPTraining_TPSCharacter()
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
+
+	// Setting up the Particle system
+	VisualEFX = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("VisEFX"));
+	VisualEFX->AttachTo(RootComponent);
+	auto ParticleSystem = ConstructorHelpers::FObjectFinder<UParticleSystem>(TEXT("ParticleSystem'/Game/StarterContent/Particles/P_Sparks.P_Sparks'"));
+	if (ParticleSystem.Object != nullptr)
+	{
+		VisualEFX->SetTemplate(ParticleSystem.Object);
+	}
+	VisualEFX->SetVisibility(false);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -151,6 +165,52 @@ void AUE_CPPTraining_TPSCharacter::Jump()
 	Super::Jump();
 
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange, TEXT("Player Jumped"));
+}
+
+void AUE_CPPTraining_TPSCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	UWorld* World = GetWorld();
+	if (World)
+	{
+		AUE_CPPTraining_TPSGameMode* MyGameMode = Cast<AUE_CPPTraining_TPSGameMode>(UGameplayStatics::GetGameMode(World));
+
+		if (MyGameMode)
+		{
+			MyGameMode->CharacterVisualEffectDelegateStart.BindUObject(this, &AUE_CPPTraining_TPSCharacter::MakeEFXVisible);
+			MyGameMode->CharacterVisualEffectDelegateStop.BindUObject(this, &AUE_CPPTraining_TPSCharacter::MakeEFXInvisibile);
+		}
+	}
+}
+
+void AUE_CPPTraining_TPSCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+
+	UWorld* World = GetWorld();
+	if (World)
+	{
+		AUE_CPPTraining_TPSGameMode* MyGameMode = Cast<AUE_CPPTraining_TPSGameMode>(UGameplayStatics::GetGameMode(World));
+
+		if (MyGameMode)
+		{
+			MyGameMode->CharacterVisualEffectDelegateStart.Unbind();
+			MyGameMode->CharacterVisualEffectDelegateStop.Unbind();
+		}
+	}
+
+	
+}
+
+void AUE_CPPTraining_TPSCharacter::MakeEFXVisible()
+{
+	VisualEFX->SetVisibility(true);
+}
+
+void AUE_CPPTraining_TPSCharacter::MakeEFXInvisibile()
+{
+	VisualEFX->SetVisibility(false);
 }
 
 void AUE_CPPTraining_TPSCharacter::OnOverlapBegin_Implementation(UPrimitiveComponent* OverlappedComponent,

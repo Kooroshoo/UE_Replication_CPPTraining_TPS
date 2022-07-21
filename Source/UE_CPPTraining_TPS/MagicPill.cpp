@@ -2,6 +2,9 @@
 
 
 #include "MagicPill.h"
+#include "PillSpawner.h"
+#include "EngineUtils.h"
+
 
 // Sets default values
 AMagicPill::AMagicPill()
@@ -20,7 +23,14 @@ AMagicPill::AMagicPill()
 void AMagicPill::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	// get the PillSpawner Actor
+	auto Itr = TActorIterator<APillSpawner>(GetWorld());
+	TriggerEventSource = *Itr;
+	if (TriggerEventSource)
+	{
+		TriggerEventSource->OnPlayerEntered.AddUObject(this, &AMagicPill::OnTriggerEvent);
+	}
 }
 
 // Called every frame
@@ -28,5 +38,11 @@ void AMagicPill::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+}
+
+void AMagicPill::OnTriggerEvent()
+{
+	PillEffectValue = FMath::RandRange(-150.f, 150.f);
+	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Green, FString::Printf(TEXT("%f is my new value"), PillEffectValue));
 }
 
