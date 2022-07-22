@@ -1,6 +1,9 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "UE_CPPTraining_TPSCharacter.h"
+
+#include <string>
+
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -12,6 +15,8 @@
 #include "Particles/ParticleSystem.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "UE_CPPTraining_TPSGameMode.h"
+#include "MagicPill.h"
+#include "Components/TextRenderComponent.h"
 
 //////////////////////////////////////////////////////////////////////////
 // AUE_CPPTraining_TPSCharacter
@@ -59,6 +64,20 @@ AUE_CPPTraining_TPSCharacter::AUE_CPPTraining_TPSCharacter()
 		VisualEFX->SetTemplate(ParticleSystem.Object);
 	}
 	VisualEFX->SetVisibility(false);
+
+	bPickupMode = true;
+
+	HP = 750.0f;
+
+	HPText = CreateDefaultSubobject<UTextRenderComponent>(TEXT("HP Text"));
+	HPText->AttachTo(RootComponent);
+	HPText->SetText(FText::FromString(FString::Printf(TEXT("HP: %.1f"), HP)));
+	HPText->SetRelativeLocation(FVector(0, -30, 75));
+	HPText->SetRelativeRotation(FRotator(0, 180.f, 0));
+	HPText->SetXScale(1.f);
+	HPText->SetYScale(1.f);
+	HPText->SetWorldSize(15);
+
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -70,6 +89,7 @@ void AUE_CPPTraining_TPSCharacter::SetupPlayerInputComponent(class UInputCompone
 	check(PlayerInputComponent);
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
+	PlayerInputComponent->BindAction("Pickup", IE_Pressed, this, &AUE_CPPTraining_TPSCharacter::PickObjects);
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &AUE_CPPTraining_TPSCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AUE_CPPTraining_TPSCharacter::MoveRight);
@@ -88,6 +108,21 @@ void AUE_CPPTraining_TPSCharacter::SetupPlayerInputComponent(class UInputCompone
 
 	// VR headset functionality
 	PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &AUE_CPPTraining_TPSCharacter::OnResetVR);
+}
+
+
+FString AUE_CPPTraining_TPSCharacter::GetTestName()
+{
+	FString MyName = this->GetName();
+	return MyName;
+}
+
+// Implementation of the react to player entered event
+bool AUE_CPPTraining_TPSCharacter::ReactToPlayerEntered_Implementation()
+{
+	HP -= 100;
+	HPText->SetText(FText::FromString(FString::Printf(TEXT("HP: %.1f"), HP)));
+	return true;
 }
 
 
@@ -157,7 +192,10 @@ void AUE_CPPTraining_TPSCharacter::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 
-
+	if (RootComponent)
+	{
+		GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &AUE_CPPTraining_TPSCharacter::OnOverlapBegin);
+	}
 }
 
 void AUE_CPPTraining_TPSCharacter::Jump()
@@ -182,6 +220,8 @@ void AUE_CPPTraining_TPSCharacter::BeginPlay()
 			MyGameMode->CharacterVisualEffectDelegateStop.BindUObject(this, &AUE_CPPTraining_TPSCharacter::MakeEFXInvisibile);
 		}
 	}
+
+
 }
 
 void AUE_CPPTraining_TPSCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -203,6 +243,20 @@ void AUE_CPPTraining_TPSCharacter::EndPlay(const EEndPlayReason::Type EndPlayRea
 	
 }
 
+void AUE_CPPTraining_TPSCharacter::PickObjects()
+{
+	bPickupMode = !bPickupMode;
+	if (bPickupMode)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Blue, FString::Printf(TEXT("Pickup mode ON")));
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Blue, FString::Printf(TEXT("Pickup mode OFF")));
+	}
+	
+}
+
 void AUE_CPPTraining_TPSCharacter::MakeEFXVisible()
 {
 	VisualEFX->SetVisibility(true);
@@ -217,5 +271,15 @@ void AUE_CPPTraining_TPSCharacter::OnOverlapBegin_Implementation(UPrimitiveCompo
                                                                  AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
                                                                  const FHitResult& SweepResult)
 {
+	AMagicPill* IsPill = Cast<AMagicPill>(OtherActor);
+	if (IsPill != nullptr)
+	{
+		if (bPickupMode)
+		{
+			HP += IsPill->PillEffectValue;
+			IsPill->Destroy();
+			HPText->SetText(FText::FromString(FString::Printf(TEXT("HP: %.1f"), HP)));
+		}
 
+	}
 }

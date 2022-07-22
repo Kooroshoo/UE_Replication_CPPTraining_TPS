@@ -4,10 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "MyInterface.h"
 #include "UE_CPPTraining_TPSCharacter.generated.h"
 
 UCLASS(config=Game)
-class AUE_CPPTraining_TPSCharacter : public ACharacter
+class AUE_CPPTraining_TPSCharacter : public ACharacter, public IMyInterface
 {
 	GENERATED_BODY()
 
@@ -28,6 +29,14 @@ public:
 	/** Base look up/down rate, in deg/sec. Other scaling may affect final rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
 	float BaseLookUpRate;
+
+	//Override the interface
+	FString GetTestName() override;
+
+	// declare a function that must be implemented in c++
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category="Interfaces")
+	bool ReactToPlayerEntered();
+	virtual bool ReactToPlayerEntered_Implementation() override;
 
 protected:
 
@@ -73,6 +82,16 @@ protected:
 	virtual void BeginPlay() override;
 
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
+	void PickObjects();
+	
+	// value to determine if our character can pickup objects
+	bool bPickupMode;
+
+	//Health
+	float HP;
+
+	class UTextRenderComponent* HPText;
 
 public:
 	/** Returns CameraBoom subobject **/

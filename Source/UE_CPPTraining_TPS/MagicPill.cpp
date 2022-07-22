@@ -43,6 +43,5 @@ void AMagicPill::Tick(float DeltaTime)
 void AMagicPill::OnTriggerEvent()
 {
 	PillEffectValue = FMath::RandRange(-150.f, 150.f);
-	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Green, FString::Printf(TEXT("%f is my new value"), PillEffectValue));
 }
 

@@ -30,10 +30,13 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-protected:
 	// The amount of health/damage
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Values")
 	float PillEffectValue;
+
+protected:
+
+
 
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Components")

@@ -9,6 +9,7 @@
 #include "UE_CPPTraining_TPSCharacter.h"
 #include "UE_CPPTraining_TPSGameMode.h"
 #include "Kismet/GameplayStatics.h"
+#include "EngineUtils.h"
 
 // Sets default values
 APillSpawner::APillSpawner()
@@ -85,6 +86,16 @@ void APillSpawner::NotifyActorBeginOverlap(AActor* OtherActor)
 		}
 
 		OnPlayerEntered.Broadcast();
+
+		for (TActorIterator<AActor> Itr (GetWorld(), AActor::StaticClass()); Itr; ++Itr)
+		{
+			AActor* Actor = *Itr;
+			IMyInterface* MyInterfaceInstance = Cast<IMyInterface>(Actor);
+			if (MyInterfaceInstance)
+			{
+				MyInterfaceInstance->Execute_ReactToPlayerEntered(Actor);
+			}
+		}
 	}
 }
 
