@@ -2,6 +2,7 @@
 
 
 #include "Cube.h"
+#include "Net/UnrealNetwork.h"
 
 // Sets default values
 ACube::ACube()
@@ -9,23 +10,38 @@ ACube::ACube()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	// Mesh Creation
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("CubeMesh"));
 	RootComponent = Mesh;
 	Mesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
 
+	// Replication Settings
+	bNetLoadOnClient = true;
+	bReplicates = true;
+
+
 }
+
+void ACube::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+	
+	Mesh->OnComponentBeginOverlap.AddDynamic(this, &ACube::OnOverlapBegin);
+	
+}
+
+
 
 // Called when the game starts or when spawned
 void ACube::BeginPlay()
 {
 	Super::BeginPlay();
 
+	// Setup dynamic material
 	Material = Mesh->GetMaterial(0);
-	UMaterialInstanceDynamic* DynamicMaterial = UMaterialInstanceDynamic::Create(Material, this);
+	DynamicMaterial = UMaterialInstanceDynamic::Create(Material, this, FName("MyDynMat"));
 	Mesh->SetMaterial(0, DynamicMaterial);
-
-	FLinearColor RandomColor = FLinearColor(255,0,0);
-	DynamicMaterial->SetVectorParameterValue(TEXT("Color"), RandomColor);
+	
 }
 
 // Called every frame
@@ -39,14 +55,29 @@ void ACube::OnOverlapBegin_Implementation(UPrimitiveComponent* OverlappedCompone
 	AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
 	const FHitResult& SweepResult)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange, TEXT("Box OverlapBegin"));
+	if (!HasAuthority())
+	{
+		return;
+	}
+	
+	RandomColor = FLinearColor::MakeRandomColor();
+	OnRep_RandomColor();
+
 }
 
-void ACube::PostInitializeComponents()
+
+// Setting up property replication
+void ACube::GetLifetimeReplicatedProps( TArray< FLifetimeProperty > & OutLifetimeProps ) const
 {
-	Super::PostInitializeComponents();
-	
-	Mesh->OnComponentBeginOverlap.AddDynamic(this, &ACube::OnOverlapBegin);
-	
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ACube, RandomColor);
 }
+
+
+void ACube::OnRep_RandomColor()
+{
+	DynamicMaterial->SetVectorParameterValue(TEXT("Color"), RandomColor);
+}
+
 
