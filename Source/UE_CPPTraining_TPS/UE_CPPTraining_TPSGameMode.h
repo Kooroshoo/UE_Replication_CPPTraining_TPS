@@ -6,8 +6,8 @@
 #include "GameFramework/GameModeBase.h"
 #include "UE_CPPTraining_TPSGameMode.generated.h"
 
-// Declaring a delegate
-DECLARE_DELEGATE(FStandardDelegateSigniture)
+// Declaring a multicast delegate
+DECLARE_MULTICAST_DELEGATE(FStandardDelegateSigniture)
 
 UCLASS(minimalapi)
 class AUE_CPPTraining_TPSGameMode : public AGameModeBase
@@ -16,7 +16,7 @@ class AUE_CPPTraining_TPSGameMode : public AGameModeBase
 
 public:
 	AUE_CPPTraining_TPSGameMode();
-
+	
 	FStandardDelegateSigniture CharacterVisualEffectDelegateStart;
 	FStandardDelegateSigniture CharacterVisualEffectDelegateStop;
 };

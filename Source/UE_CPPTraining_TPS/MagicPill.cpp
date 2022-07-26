@@ -17,6 +17,12 @@ AMagicPill::AMagicPill()
 	RootComponent = PillMesh;
 	PillMesh->SetSimulatePhysics(true);
 
+	// Replication Settings
+	bNetLoadOnClient = true;
+	bReplicates = true;
+	SetReplicatingMovement(true);
+
+
 }
 
 // Called when the game starts or when spawned

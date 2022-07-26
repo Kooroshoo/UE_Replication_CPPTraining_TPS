@@ -89,9 +89,14 @@ protected:
 	bool bPickupMode;
 
 	//Health
+	UPROPERTY(ReplicatedUsing=OnRep_HP)
 	float HP;
 
+	//UPROPERTY(Replicated)
 	class UTextRenderComponent* HPText;
+
+	UFUNCTION()
+	void OnRep_HP();
 
 public:
 	/** Returns CameraBoom subobject **/

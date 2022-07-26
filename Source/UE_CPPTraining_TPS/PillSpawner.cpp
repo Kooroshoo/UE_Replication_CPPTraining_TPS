@@ -18,6 +18,7 @@ APillSpawner::APillSpawner()
 	PrimaryActorTick.bCanEverTick = true;
 
 	SpawningVolume = CreateDefaultSubobject<UBoxComponent>(TEXT("Spawning Volume"));
+	SpawningVolume->SetHiddenInGame(false);
 	RootComponent = SpawningVolume;
 
 	// this makes the item to spawn a magic pill
@@ -68,10 +69,15 @@ void APillSpawner::NotifyActorBeginOverlap(AActor* OtherActor)
 {
 	Super::NotifyActorBeginOverlap(OtherActor);
 
+	if (!HasAuthority())
+	{
+		return;
+	}
+
 	AUE_CPPTraining_TPSCharacter* IsOtherPlayer = Cast<AUE_CPPTraining_TPSCharacter>(OtherActor);
 	if (IsOtherPlayer)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Orange, FString::Printf(TEXT("%s has entered the volume"), *OtherActor->GetName()));
+		//GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Orange, FString::Printf(TEXT("%s has entered the volume"), *OtherActor->GetName()));
 		SpawnPills();
 
 		UWorld* World = GetWorld();
@@ -81,7 +87,7 @@ void APillSpawner::NotifyActorBeginOverlap(AActor* OtherActor)
 
 			if (MyGameMode)
 			{
-				MyGameMode->CharacterVisualEffectDelegateStart.ExecuteIfBound();
+				MyGameMode->CharacterVisualEffectDelegateStart.Broadcast();
 			}
 		}
 
@@ -106,7 +112,7 @@ void APillSpawner::NotifyActorEndOverlap(AActor* OtherActor)
 	AUE_CPPTraining_TPSCharacter* IsOtherPlayer = Cast<AUE_CPPTraining_TPSCharacter>(OtherActor);
 	if (IsOtherPlayer)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Orange, FString::Printf(TEXT("%s has exited the volume"), *OtherActor->GetName()));
+		//GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Orange, FString::Printf(TEXT("%s has exited the volume"), *OtherActor->GetName()));
 
 		UWorld* World = GetWorld();
 		if (World)
@@ -115,7 +121,7 @@ void APillSpawner::NotifyActorEndOverlap(AActor* OtherActor)
 
 			if (MyGameMode)
 			{
-				MyGameMode->CharacterVisualEffectDelegateStop.ExecuteIfBound();
+				MyGameMode->CharacterVisualEffectDelegateStop.Broadcast();
 			}
 		}
 	}

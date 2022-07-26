@@ -17,6 +17,7 @@
 #include "UE_CPPTraining_TPSGameMode.h"
 #include "MagicPill.h"
 #include "Components/TextRenderComponent.h"
+#include "Net/UnrealNetwork.h"
 
 //////////////////////////////////////////////////////////////////////////
 // AUE_CPPTraining_TPSCharacter
@@ -64,6 +65,7 @@ AUE_CPPTraining_TPSCharacter::AUE_CPPTraining_TPSCharacter()
 		VisualEFX->SetTemplate(ParticleSystem.Object);
 	}
 	VisualEFX->SetVisibility(false);
+	VisualEFX->SetIsReplicated(true);
 
 	bPickupMode = true;
 
@@ -216,8 +218,8 @@ void AUE_CPPTraining_TPSCharacter::BeginPlay()
 
 		if (MyGameMode)
 		{
-			MyGameMode->CharacterVisualEffectDelegateStart.BindUObject(this, &AUE_CPPTraining_TPSCharacter::MakeEFXVisible);
-			MyGameMode->CharacterVisualEffectDelegateStop.BindUObject(this, &AUE_CPPTraining_TPSCharacter::MakeEFXInvisibile);
+			MyGameMode->CharacterVisualEffectDelegateStart.AddUObject(this, &AUE_CPPTraining_TPSCharacter::MakeEFXVisible);
+			MyGameMode->CharacterVisualEffectDelegateStop.AddUObject(this, &AUE_CPPTraining_TPSCharacter::MakeEFXInvisibile);
 		}
 	}
 
@@ -235,8 +237,8 @@ void AUE_CPPTraining_TPSCharacter::EndPlay(const EEndPlayReason::Type EndPlayRea
 
 		if (MyGameMode)
 		{
-			MyGameMode->CharacterVisualEffectDelegateStart.Unbind();
-			MyGameMode->CharacterVisualEffectDelegateStop.Unbind();
+			MyGameMode->CharacterVisualEffectDelegateStart.RemoveAll(this);
+			MyGameMode->CharacterVisualEffectDelegateStop.RemoveAll(this);
 		}
 	}
 
@@ -257,9 +259,15 @@ void AUE_CPPTraining_TPSCharacter::PickObjects()
 	
 }
 
+void AUE_CPPTraining_TPSCharacter::OnRep_HP()
+{
+	HPText->SetText(FText::FromString(FString::Printf(TEXT("HP: %.1f"), HP)));
+}
+
 void AUE_CPPTraining_TPSCharacter::MakeEFXVisible()
 {
 	VisualEFX->SetVisibility(true);
+	//GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Red, FString::Printf(TEXT("name: %s"), *this->GetName()));
 }
 
 void AUE_CPPTraining_TPSCharacter::MakeEFXInvisibile()
@@ -271,6 +279,11 @@ void AUE_CPPTraining_TPSCharacter::OnOverlapBegin_Implementation(UPrimitiveCompo
                                                                  AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
                                                                  const FHitResult& SweepResult)
 {
+	if (!HasAuthority())
+	{
+		return;
+	}
+	
 	AMagicPill* IsPill = Cast<AMagicPill>(OtherActor);
 	if (IsPill != nullptr)
 	{
@@ -278,8 +291,17 @@ void AUE_CPPTraining_TPSCharacter::OnOverlapBegin_Implementation(UPrimitiveCompo
 		{
 			HP += IsPill->PillEffectValue;
 			IsPill->Destroy();
-			HPText->SetText(FText::FromString(FString::Printf(TEXT("HP: %.1f"), HP)));
+			OnRep_HP();
 		}
 
 	}
+}
+
+// Setting up property replication
+void AUE_CPPTraining_TPSCharacter::GetLifetimeReplicatedProps( TArray< FLifetimeProperty > & OutLifetimeProps ) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AUE_CPPTraining_TPSCharacter, HP);
+	
 }
