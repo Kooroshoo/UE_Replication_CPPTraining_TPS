@@ -24,7 +24,7 @@ EBTNodeResult::Type UBTTask_ChasePlayer::ExecuteTask(UBehaviorTreeComponent& Own
 	if (ThisNPC)
 	{
 		FVector PlayerPos = OwnerComp.GetBlackboardComponent()->GetValue<UBlackboardKeyType_Vector>(ThisNPC->NPCKeyID);
-		ThisNPC->MoveToLocation(PlayerPos, 5.f, true, true, false, true, 0, true);
+		ThisNPC->MoveToLocation(PlayerPos, 100.f, true, true, false, true, 0, true);
 		return EBTNodeResult::Succeeded;
 	}
 
