@@ -112,6 +112,8 @@ public:
 	void MakeEFXVisible();
 	void MakeEFXInvisibile();
 
+	void UpdateHP(float val);
+
 	
 };
 

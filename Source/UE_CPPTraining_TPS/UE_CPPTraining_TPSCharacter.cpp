@@ -17,6 +17,7 @@
 #include "UE_CPPTraining_TPSGameMode.h"
 #include "MagicPill.h"
 #include "Components/TextRenderComponent.h"
+#include "Materials/MaterialInstanceConstant.h"
 #include "Net/UnrealNetwork.h"
 
 //////////////////////////////////////////////////////////////////////////
@@ -69,6 +70,7 @@ AUE_CPPTraining_TPSCharacter::AUE_CPPTraining_TPSCharacter()
 
 	bPickupMode = true;
 
+	// Max Health
 	HP = 750.0f;
 
 	HPText = CreateDefaultSubobject<UTextRenderComponent>(TEXT("HP Text"));
@@ -80,6 +82,10 @@ AUE_CPPTraining_TPSCharacter::AUE_CPPTraining_TPSCharacter()
 	HPText->SetYScale(1.f);
 	HPText->SetWorldSize(15);
 
+	// Dynamic Material
+	UMaterialInstanceConstant* TheConstMatInst = ConstructorHelpers::FObjectFinderOptional<UMaterialInstanceConstant>(TEXT("MaterialInstanceConstant'/Game/Mannequin/Character/Materials/MI_Male_Body_Dynamic_Inst.MI_Male_Body_Dynamic_Inst'")).Get();
+	UMaterialInstanceDynamic* DynamicMaterialInstance = UMaterialInstanceDynamic::Create(TheConstMatInst, this->GetMesh());
+	this->GetMesh()->SetMaterial(0, DynamicMaterialInstance);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -122,7 +128,8 @@ FString AUE_CPPTraining_TPSCharacter::GetTestName()
 // Implementation of the react to player entered event
 bool AUE_CPPTraining_TPSCharacter::ReactToPlayerEntered_Implementation()
 {
-	HP -= 100;
+	//HP -= 100;
+	UpdateHP(-100);
 	HPText->SetText(FText::FromString(FString::Printf(TEXT("HP: %.1f"), HP)));
 	return true;
 }
@@ -262,6 +269,10 @@ void AUE_CPPTraining_TPSCharacter::PickObjects()
 void AUE_CPPTraining_TPSCharacter::OnRep_HP()
 {
 	HPText->SetText(FText::FromString(FString::Printf(TEXT("HP: %.1f"), HP)));
+
+	UMaterialInstanceDynamic* DynamicMaterialInstance = GetMesh()->CreateAndSetMaterialInstanceDynamic(0);
+	float UpdateMatInstAmount = 1 - HP/750;
+	DynamicMaterialInstance->SetScalarParameterValue("Amount", UpdateMatInstAmount);
 }
 
 void AUE_CPPTraining_TPSCharacter::MakeEFXVisible()
@@ -273,6 +284,24 @@ void AUE_CPPTraining_TPSCharacter::MakeEFXVisible()
 void AUE_CPPTraining_TPSCharacter::MakeEFXInvisibile()
 {
 	VisualEFX->SetVisibility(false);
+}
+
+void AUE_CPPTraining_TPSCharacter::UpdateHP(float val)
+{
+	HP += val;
+
+	if (HP < 0)
+	{
+		HP = 0;
+	}
+	if (HP > 750)
+	{
+		HP = 750;
+	}
+
+	float UpdateMatInstAmount = 1 - HP/750;
+	UMaterialInstanceDynamic* DynamicMaterialInstance = GetMesh()->CreateAndSetMaterialInstanceDynamic(0);
+	DynamicMaterialInstance->SetScalarParameterValue("Amount", UpdateMatInstAmount);
 }
 
 void AUE_CPPTraining_TPSCharacter::OnOverlapBegin_Implementation(UPrimitiveComponent* OverlappedComponent,
@@ -289,7 +318,8 @@ void AUE_CPPTraining_TPSCharacter::OnOverlapBegin_Implementation(UPrimitiveCompo
 	{
 		if (bPickupMode)
 		{
-			HP += IsPill->PillEffectValue;
+			//HP += IsPill->PillEffectValue;
+			UpdateHP(IsPill->PillEffectValue);
 			IsPill->Destroy();
 			OnRep_HP();
 		}
