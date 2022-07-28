@@ -5,10 +5,11 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "MyInterface.h"
+#include "GameplayTask.h"
 #include "UE_CPPTraining_TPSCharacter.generated.h"
 
 UCLASS(config=Game)
-class AUE_CPPTraining_TPSCharacter : public ACharacter, public IMyInterface
+class AUE_CPPTraining_TPSCharacter : public ACharacter, public IMyInterface, public IGameplayTaskOwnerInterface
 {
 	GENERATED_BODY()
 
@@ -114,6 +115,8 @@ public:
 
 	void UpdateHP(float val);
 
+	virtual void Tick(float DeltaSeconds) override;
+	
 	
 };
 

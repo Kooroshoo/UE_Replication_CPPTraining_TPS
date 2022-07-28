@@ -4,6 +4,7 @@
 
 #include <string>
 
+#include "GameplayTask_SpawnParticles.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -86,6 +87,9 @@ AUE_CPPTraining_TPSCharacter::AUE_CPPTraining_TPSCharacter()
 	UMaterialInstanceConstant* TheConstMatInst = ConstructorHelpers::FObjectFinderOptional<UMaterialInstanceConstant>(TEXT("MaterialInstanceConstant'/Game/Mannequin/Character/Materials/MI_Male_Body_Dynamic_Inst.MI_Male_Body_Dynamic_Inst'")).Get();
 	UMaterialInstanceDynamic* DynamicMaterialInstance = UMaterialInstanceDynamic::Create(TheConstMatInst, this->GetMesh());
 	this->GetMesh()->SetMaterial(0, DynamicMaterialInstance);
+	
+
+
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -205,6 +209,8 @@ void AUE_CPPTraining_TPSCharacter::PostInitializeComponents()
 	{
 		GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &AUE_CPPTraining_TPSCharacter::OnOverlapBegin);
 	}
+	
+	
 }
 
 void AUE_CPPTraining_TPSCharacter::Jump()
@@ -303,6 +309,18 @@ void AUE_CPPTraining_TPSCharacter::UpdateHP(float val)
 	UMaterialInstanceDynamic* DynamicMaterialInstance = GetMesh()->CreateAndSetMaterialInstanceDynamic(0);
 	DynamicMaterialInstance->SetScalarParameterValue("Amount", UpdateMatInstAmount);
 }
+
+void AUE_CPPTraining_TPSCharacter::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	// Rotate the HPText
+	/*
+	FRotator HPRotator(0, 1.5f, 0);
+	HPText->AddLocalRotation(HPRotator);
+	*/
+}
+
 
 void AUE_CPPTraining_TPSCharacter::OnOverlapBegin_Implementation(UPrimitiveComponent* OverlappedComponent,
                                                                  AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
